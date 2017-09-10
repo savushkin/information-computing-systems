@@ -4,25 +4,45 @@ import java.sql.*;
 
 public class Lab {
     public static void main(String[] args) {
-        Connection conn = null;
+        Connection connection = null;
 
         try {
             Class.forName("org.postgresql.Driver");
-            conn = DriverManager.getConnection(
-                    "jdbc:postgresql://pg:5432/ucheb","", "");
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM Н_ЦИКЛЫ_ДИСЦИПЛИН");
-            while(rs.next()) {
-                int count = rs.getInt(1);
-                System.out.println("Result set is: "+count);
+            connection = DriverManager.getConnection(
+                    "jdbc:postgresql://pg:5432/ucheb","s182190", "tny395");
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM Н_ЦИКЛЫ_ДИСЦИПЛИН");
+            ResultSetMetaData metaData = resultSet.getMetaData();
+
+            while(resultSet.next()) {
+                int columnsCount = metaData.getColumnCount();
+                for (int column = 1; column <= columnsCount; column++) {
+                    System.out.print(metaData.getColumnName(column) + ": ");
+                    switch (metaData.getColumnType(column)) {
+                        case 4:
+                            System.out.println(resultSet.getInt(column));
+                            break;
+                        case 12:
+                            System.out.println(resultSet.getString(column));
+                            break;
+                        case 93:
+                            System.out.println(resultSet.getTimestamp(column).toString());
+                            break;
+
+                        default:
+                            System.out.println("column type - " + metaData.getColumnType(column));
+                            break;
+                    }
+                }
+                System.out.println();
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             try {
-                if (conn != null) {
-                    conn.close();
+                if (connection != null) {
+                    connection.close();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
