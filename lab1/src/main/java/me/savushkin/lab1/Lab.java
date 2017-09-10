@@ -9,7 +9,7 @@ public class Lab {
         try {
             Class.forName("org.postgresql.Driver");
             connection = DriverManager.getConnection(
-                    "jdbc:postgresql://pg:5432/ucheb","s182190", "tny395");
+                    "jdbc:postgresql://pg:5432/ucheb","", "");
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM Н_ЦИКЛЫ_ДИСЦИПЛИН");
             ResultSetMetaData metaData = resultSet.getMetaData();
