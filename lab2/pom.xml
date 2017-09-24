@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>lab1</artifactId>
+    <artifactId>lab2</artifactId>
     <version>1.0-SNAPSHOT</version>
     <parent>
         <groupId>me.savushkin</groupId>
@@ -19,7 +19,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>me.savushkin.lab1.Lab</mainClass>
+                            <mainClass>me.savushkin.lab2.Lab</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -35,7 +35,6 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 

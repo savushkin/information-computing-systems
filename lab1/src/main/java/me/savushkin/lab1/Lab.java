@@ -1,6 +1,12 @@
 package me.savushkin.lab1;
 
-import java.sql.*;
+import me.savushkin.common.LabHelper;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class Lab {
@@ -9,50 +15,31 @@ public class Lab {
     public static void main(String[] args) {
         Connection connection = null;
         try {
-            LabHelper.registration("org.postgresql.Driver");
-            //LabHelper.registration(new org.postgresql.Driver());
+            //LabHelper.registration("org.postgresql.Driver");
+            LabHelper.registration("oracle.jdbc.driver.OracleDriver");
 
+            //connection = LabHelper.connection(
+            //        "jdbc:postgresql://pg:5432/ucheb","", "");
             connection = LabHelper.connection(
-                    "jdbc:postgresql://pg:5432/ucheb","", "");
+                    "jdbc:oracle:thin:@localhost:1521:orbis","", "");
 
-            String query = null;
+            List<String> queryList = Arrays.asList(
+                    "SELECT * FROM Н_ЦИКЛЫ_ДИСЦИПЛИН",
+                    "SELECT АББРЕВИАТУРА, НАИМЕНОВАНИЕ FROM Н_ЦИКЛЫ_ДИСЦИПЛИН",
+                    "SELECT НАИМЕНОВАНИЕ FROM Н_КВАЛИФИКАЦИИ",
+                    "SELECT DISTINCT ИМЯ FROM Н_ЛЮДИ",
+                    "SELECT DISTINCT ПРИЗНАК FROM Н_УЧЕНИКИ");
             Statement statement = connection.createStatement();
-
-            query = "SELECT * FROM Н_ЦИКЛЫ_ДИСЦИПЛИН";
-            ResultSet resultSet = statement.executeQuery(query);
-            System.out.println(query);
-            Lab.printResult(resultSet);
-            resultSet.close();
-
-            query = "SELECT АББРЕВИАТУРА, НАИМЕНОВАНИЕ FROM Н_ЦИКЛЫ_ДИСЦИПЛИН";
-            resultSet = statement.executeQuery(query);
-            System.out.println(query);
-            Lab.printResult(resultSet);
-            resultSet.close();
-
-            query = "SELECT НАИМЕНОВАНИЕ FROM Н_КВАЛИФИКАЦИИ";
-            resultSet = statement.executeQuery(query);
-            System.out.println(query);
-            Lab.printResult(resultSet);
-            resultSet.close();
-
-            query = "SELECT НАИМЕНОВАНИЕ FROM Н_КВАЛИФИКАЦИИ";
-            resultSet = statement.executeQuery(query);
-            System.out.println(query);
-            Lab.printResult(resultSet);
-            resultSet.close();
-
-            query = "SELECT DISTINCT ИМЯ FROM Н_ЛЮДИ";
-            resultSet = statement.executeQuery(query);
-            System.out.println(query);
-            Lab.printResult(resultSet);
-            resultSet.close();
-
-            query = "SELECT DISTINCT ПРИЗНАК FROM Н_УЧЕНИКИ";
-            resultSet = statement.executeQuery(query);
-            System.out.println(query);
-            Lab.printResult(resultSet);
-            resultSet.close();
+            queryList.forEach(query -> {
+                try {
+                    ResultSet resultSet = statement.executeQuery(query);
+                    System.out.println(query);
+                    LabHelper.printResultSet(resultSet);
+                    resultSet.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
 
             statement.close();
 
@@ -68,37 +55,4 @@ public class Lab {
             }
         }
     }
-
-    static void printResult(ResultSet resultSet) throws SQLException {
-        ResultSetMetaData metaData = resultSet.getMetaData();
-
-        while(resultSet.next()) {
-            int columnsCount = metaData.getColumnCount();
-            for (int column = 1; column <= columnsCount; column++) {
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append(metaData.getColumnName(column)).append(": ");
-                switch (metaData.getColumnType(column)) {
-                    case 4:
-                        stringBuilder.append(resultSet.getInt(column));
-                        break;
-                    case 12:
-                        stringBuilder.append(resultSet.getString(column));
-                        break;
-                    case 93:
-                        stringBuilder.append(resultSet.getTimestamp(column).toString());
-                        break;
-
-                    default:
-                        stringBuilder.append("column type - ").append(metaData.getColumnType(column));
-                        break;
-                }
-                System.out.println(stringBuilder.toString());
-            }
-            System.out.println();
-        }
-
-    }
-
-
-
 }
