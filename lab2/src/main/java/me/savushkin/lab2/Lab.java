@@ -9,6 +9,15 @@ import java.sql.Statement;
 import java.util.logging.Logger;
 
 public class Lab {
+    private static String ORACLE_URL = "jdbc:oracle:thin:@localhost:1521:orbis";
+    private static String ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver";
+    private static String ORACLE_USER = "";
+    private static String ORACLE_PASS = "";
+    private static String POSTGRES_URL = "jdbc:postgresql://pg:5432/ucheb";
+    private static String POSTGRES_DRIVER = "org.postgresql.Driver";
+    private static String POSTGRES_USER = "";
+    private static String POSTGRES_PASS = "";
+
     static Logger log = Logger.getLogger(Lab.class.getName());
 
     public static void main(String[] args) {
@@ -17,13 +26,11 @@ public class Lab {
                 case "task1": {
                     Connection connection = null;
                     try {
-                        //LabHelper.registration("org.postgresql.Driver");
-                        LabHelper.registration("oracle.jdbc.driver.OracleDriver");
+                        //LabHelper.registration(POSTGRES_DRIVER);
+                        LabHelper.registration(ORACLE_DRIVER);
 
-                        //connection = LabHelper.connection(
-                        //        "jdbc:postgresql://pg:5432/ucheb","", "");
-                        connection = LabHelper.connection(
-                                "jdbc:oracle:thin:@localhost:1521:orbis", "s182190", "tny395");
+                        //connection = LabHelper.connection(POSTGRES_URL, POSTGRES_USER, POSTGRES_PASS);
+                        connection = LabHelper.connection(ORACLE_URL, ORACLE_USER, ORACLE_PASS);
 
                         Statement statement = connection.createStatement();
                         createTables(statement);
@@ -48,13 +55,11 @@ public class Lab {
                     ResultSet rs = null;
                     boolean executeResult;
                     try {
-                        //LabHelper.registration("org.postgresql.Driver");
-                        LabHelper.registration("oracle.jdbc.driver.OracleDriver");
+                        //LabHelper.registration(POSTGRES_DRIVER);
+                        LabHelper.registration(ORACLE_DRIVER);
 
-                        //connection = LabHelper.connection(
-                        //        "jdbc:postgresql://pg:5432/ucheb","", "");
-                        connection = LabHelper.connection(
-                                "jdbc:oracle:thin:@localhost:1521:orbis", "", "");
+                        //connection = LabHelper.connection(POSTGRES_URL, POSTGRES_USER, POSTGRES_PASS);
+                        connection = LabHelper.connection(ORACLE_URL, ORACLE_USER, ORACLE_PASS);
 
                         st = connection.createStatement();
 
