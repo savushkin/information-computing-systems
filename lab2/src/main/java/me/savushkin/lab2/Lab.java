@@ -3,6 +3,7 @@ package me.savushkin.lab2;
 import me.savushkin.common.LabHelper;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Logger;
@@ -11,34 +12,85 @@ public class Lab {
     static Logger log = Logger.getLogger(Lab.class.getName());
 
     public static void main(String[] args) {
-        Connection connection = null;
-        try {
-            //LabHelper.registration("org.postgresql.Driver");
-            LabHelper.registration("oracle.jdbc.driver.OracleDriver");
+        if (args.length > 0)
+            switch (args[0]) {
+                case "task1": {
+                    Connection connection = null;
+                    try {
+                        //LabHelper.registration("org.postgresql.Driver");
+                        LabHelper.registration("oracle.jdbc.driver.OracleDriver");
 
-            //connection = LabHelper.connection(
-            //        "jdbc:postgresql://pg:5432/ucheb","", "");
-            connection = LabHelper.connection(
-                    "jdbc:oracle:thin:@localhost:1521:orbis","", "");
+                        //connection = LabHelper.connection(
+                        //        "jdbc:postgresql://pg:5432/ucheb","", "");
+                        connection = LabHelper.connection(
+                                "jdbc:oracle:thin:@localhost:1521:orbis", "s182190", "tny395");
 
-            Statement statement = connection.createStatement();
-            createTables(statement);
-            insertData(statement);
-            statement.close();
+                        Statement statement = connection.createStatement();
+                        createTables(statement);
+                        insertData(statement);
+                        statement.close();
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        try {
+                            if (connection != null)
+                                connection.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+                case "task2": {
+                    Connection connection = null;
+                    Statement st = null;
+                    ResultSet rs = null;
+                    boolean executeResult;
+                    try {
+                        //LabHelper.registration("org.postgresql.Driver");
+                        LabHelper.registration("oracle.jdbc.driver.OracleDriver");
+
+                        //connection = LabHelper.connection(
+                        //        "jdbc:postgresql://pg:5432/ucheb","", "");
+                        connection = LabHelper.connection(
+                                "jdbc:oracle:thin:@localhost:1521:orbis", "", "");
+
+                        st = connection.createStatement();
+
+                        String sql = "INSERT INTO номера_телефонов VALUES(121018,'9999999',{d '2000-4-20'},1)";
+                        executeResult = st.execute(sql);
+                        processExecute(st, executeResult);
+
+                        sql = "SELECT фамилия, имя, номер_телефона, дата_регистрации, оператор "
+                                +"FROM н_люди л, номера_телефонов т, операторы_связи о "
+                                +"WHERE л.ид = т.ид_л AND т.ид_ос = о.ид";
+                        executeResult = st.execute(sql);
+                        processExecute(st, executeResult);
+
+                        System.out.println("Программа завершена.");
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        try {
+                            if (connection != null)
+                                connection.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+                }
+                default:
+                    System.err.println("Undefined argument");
+                    break;
             }
-        }
+
     }
 
+
+    // task 1
     public static void createTables(Statement statement) throws SQLException {
         String operatorsql = "CREATE TABLE операторы_связи (ид NUMERIC(3) CONSTRAINT ПК_ОС PRIMARY KEY, оператор VARCHAR(20))";
         String telefonsql = "CREATE TABLE номера_телефонов (ид_л NUMERIC(9) CONSTRAINT ВК_Л REFERENCES н_люди(ид), номер_телефона VARCHAR(20), дата_регистрации DATE, ид_ос NUMERIC(3) CONSTRAINT ВК_ОС REFERENCES операторы_связи(ид))";
@@ -68,6 +120,7 @@ public class Lab {
             System.out.println("Таблица номера_телефонов создана...");
     }
 
+    // task 1
     public static void insertData(Statement statement) throws SQLException {
 
         //Загрузка данных в таблицу операторы_связи
@@ -83,6 +136,17 @@ public class Lab {
         statement.executeUpdate("INSERT INTO номера_телефонов VALUES(120848,'4454545',{d '2003-7-30'},3)");
         statement.executeUpdate("INSERT INTO номера_телефонов VALUES(120848,'1161616',{d '2004-1-16'},4)");
         System.out.println("Загрузка данных закончена...");
+    }
+
+    // task 2
+    public static void processExecute(Statement st, boolean executeResult) throws SQLException {
+        do {
+            ResultSet resultSet = st.getResultSet();
+            if (resultSet != null)
+                LabHelper.printResultSet(resultSet);
+            else
+                System.out.println(String.format("Количество созданных или изменённых строк - %d\n", st.getUpdateCount()));
+        } while (!(!st.getMoreResults() && st.getUpdateCount() == -1));
     }
 
 }
