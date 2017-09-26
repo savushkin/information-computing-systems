@@ -70,6 +70,7 @@ public class Lab {
                             statement.executeUpdate(
                                     "INSERT INTO номера_телефонов VALUES(130777,'2223322',{d '2004-2-3'},5)");
                             connection.commit();
+                            connection.setAutoCommit(true);
                         } catch (SQLException e) {
                             System.out.println("SQLException сообщение: " + e.getMessage());
                             System.out.println("Начнем откат изменений...");
@@ -126,7 +127,6 @@ public class Lab {
             } finally {
                 try {
                     if (connection != null) {
-                        connection.setAutoCommit(true);
                         connection.close();
                     }
                 } catch (Exception e) {
