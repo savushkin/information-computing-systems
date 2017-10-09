@@ -19,7 +19,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>me.savushkin.lab4.S182190</mainClass>
+                            <mainClass>me.savushkin.lab4.Lab</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

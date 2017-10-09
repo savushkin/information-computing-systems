@@ -33,6 +33,7 @@ public class LabHelper {
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append(metaData.getColumnName(column)).append(": ");
                 switch (metaData.getColumnType(column)) {
+                    case 2:
                     case 4:
                         stringBuilder.append(resultSet.getInt(column));
                         break;
