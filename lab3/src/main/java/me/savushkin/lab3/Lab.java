@@ -19,8 +19,8 @@ import java.util.logging.Logger;
 public class Lab {
     private static String ORACLE_URL = "jdbc:oracle:thin:@localhost:1521:orbis";
     private static String ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver";
-    private static String ORACLE_USER = "s182190";
-    private static String ORACLE_PASS = "tny395";
+    private static String ORACLE_USER = "";
+    private static String ORACLE_PASS = "";
     private static String POSTGRES_URL = "jdbc:postgresql://pg:5432/ucheb";
     private static String POSTGRES_DRIVER = "org.postgresql.Driver";
     private static String POSTGRES_USER = "";
@@ -102,18 +102,6 @@ public class Lab {
                         //rs = st.executeQuery("SELECT * FROM операторы_связи");
                         resultSet.beforeFirst();
                         LabHelper.printResultSet(resultSet);
-                        break;
-                    }
-                    case "task5": {
-
-                        break;
-                    }
-                    case "task6": {
-
-                        break;
-                    }
-                    case "task7": {
-
                         break;
                     }
                     default:
