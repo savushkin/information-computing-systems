@@ -1,6 +1,5 @@
 package me.savushkin.lab4;
 
-import me.savushkin.common.LabHelper;
 import oracle.jdbc.pool.OracleDataSource;
 
 import javax.naming.Context;
@@ -14,44 +13,50 @@ import java.util.Hashtable;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import static java.lang.System.getProperties;
+import static java.lang.System.getProperty;
+
 public class Lab {
 
     static Logger log = Logger.getLogger(Lab.class.getName());
 
     public static void main(String[] args) {
 
-        Connection conn=null;
+        Connection conn = null;
         //get properties
-        Properties prop = getProperties();
-        String driver = prop.getProperty("jdbc.drivers");
-        String jdbcUrl=prop.getProperty("jdbcUrl");
-        System.setProperty("drivers",driver);
-        System.setProperty("url",jdbcUrl);
+        Properties prop = getPropertiesFromFile();
+        String driver = prop.getProperty("driver1");
+        String jdbcUrl = prop.getProperty("jdbcUrl1");
+        System.setProperty("driver", driver);
+        System.setProperty("url", jdbcUrl);
         //setProperty();
-        try
-        {
-        //Driver registration
-            System.out.println("Driver " + System.getProperty("drivers"));
-            //Class.forName(System.getProperty("drivers"));
+        try {
+            //Driver registration
+            System.out.println("Driver: " + System.getProperty("driver"));
+            Class.forName(System.getProperty("driver")).newInstance();
 
-        //Create connection
+
+            //Create connection
             System.out.println("Connection to database...");
-            System.out.println("Connection to "+ System.getProperty("url"));
-            //conn=DriverManager.getConnection(System.getProperty("url"));
-        //Executing the query
-            //Statement statement=conn.createStatement();
-            String sql="SELECT COUNT(*) FROM all_tables";
-            //statement.execute(sql);
-            //statement.close();
-            //conn.close();
-        } catch (Exception e){
+            System.out.println("Connection to " + getProperty("url"));
+            conn = DriverManager.getConnection(getProperty("url"));
+            //Executing the query
+            Statement statement = conn.createStatement();
+            String sql = "SELECT COUNT(*) FROM all_tables";
+            statement.execute(sql);
+            statement.close();
+            conn.close();
+        }catch (ClassNotFoundException e){
+            System.out.println("Driver not found");
+            e.printStackTrace();
+    }catch (Exception e){
             e.printStackTrace();
         }
 
     }
 
     //get property
-    private static Properties getProperties() {
+    private static Properties getPropertiesFromFile() {
         Properties prop = new Properties();
         InputStream input = null;
         try {
