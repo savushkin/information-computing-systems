@@ -20,16 +20,43 @@ public class Lab {
 
     public static void main(String[] args) {
 
+        Connection conn=null;
+        //get properties
+        Properties prop = getProperties();
+        String driver = prop.getProperty("jdbc.drivers");
+        String jdbcUrl=prop.getProperty("jdbcUrl");
+        System.setProperty("drivers",driver);
+        System.setProperty("url",jdbcUrl);
+        //setProperty();
+        try
+        {
+        //Driver registration
+            System.out.println("Driver " + System.getProperty("drivers"));
+            //Class.forName(System.getProperty("drivers"));
+
+        //Create connection
+            System.out.println("Connection to database...");
+            System.out.println("Connection to "+ System.getProperty("url"));
+            //conn=DriverManager.getConnection(System.getProperty("url"));
+        //Executing the query
+            //Statement statement=conn.createStatement();
+            String sql="SELECT COUNT(*) FROM all_tables";
+            //statement.execute(sql);
+            //statement.close();
+            //conn.close();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
     }
 
     //get property
-    private Properties getProperties() {
+    private static Properties getProperties() {
         Properties prop = new Properties();
         InputStream input = null;
         try {
 
-            input = new FileInputStream("database.properties");
-
+            input = Lab.class.getResourceAsStream("/database.properties");
             // load a properties file
             prop.load(input);
 
@@ -50,31 +77,5 @@ public class Lab {
     //set property
     private static void setProperty() {
 
-        Properties prop = new Properties();
-        OutputStream output = null;
-        try {
-
-            output = new FileOutputStream("database.properties");
-
-            // set the properties value
-            prop.setProperty("jdbc.drivers", "oracle.jdbc.OracleDriver");
-            prop.setProperty("jdbcUrl", "jdbcoraclethin@localhost1521orbis");
-            prop.setProperty("dbuser", "mkyong");
-            prop.setProperty("dbpassword", "password");
-
-            // save properties to project root folder
-            prop.store(output, null);
-
-        } catch (IOException io) {
-            io.printStackTrace();
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
     }
 }
