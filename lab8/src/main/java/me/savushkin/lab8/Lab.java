@@ -46,7 +46,7 @@ public class Lab {
 
                             try (ObjectOutputStream objectOutputStream =
                                          new ObjectOutputStream(
-                                                 new FileOutputStream(String.format("S182190-%d", i)))) {
+                                                 new FileOutputStream(String.format("S182190_%d", i)))) {
                                 objectOutputStream.writeObject(oracleCachedRowSet);
                                 objectOutputStream.close();
                             } catch (IOException e) {

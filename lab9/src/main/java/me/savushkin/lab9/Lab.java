@@ -1,217 +1,167 @@
 package me.savushkin.lab9;
 
-import me.savushkin.common.LabHelper;
-import oracle.jdbc.pool.OracleDataSource;
 import oracle.jdbc.rowset.OracleCachedRowSet;
-import oracle.jdbc.rowset.OracleJDBCRowSet;
-import oracle.sql.ROWID;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
-import java.io.*;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.RowId;
-import java.sql.SQLException;
-import java.util.Hashtable;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.sql.*;
+import java.util.Arrays;
+import java.util.List;
 
 public class Lab {
+    // 1. Восстановить объект типа CachedRowSet из файла, сохраненного при выполнении задания №8 в домашнем каталоге студента, ID которого совпадает с номером варианта, выданного преподавателем.
+    // 2. Вывести на экран данные полученного объекта типа CachedRowSet в виде таблицы с названиями столбцов и указанием типа данных каждого столбца, для чего необходимо получить объект типа ResultSetMetaData и воспользоваться его методами.
+    // 3. Создать в базе данных таблицу с соответствующим количеством столбцов и заполнить ее данными объекта типа CachedRowSet. Типы данных объекта CachedRowSet и столбцов таблицы должны совпадать.
+    // 4. Обновить данные в таблице и выдать их используя тот же самый объект CachedRowSet в виде таблицы с названиями столбцов и указанием типа данных каждого столбца, для чего необходимо получить объект типа ResultSetMetaData и воспользоваться его методами.
     private final static String ORACLE_URL = "jdbc:oracle:thin:@localhost:1521:orbis";
     private final static String ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver";
     private final static String ORACLE_USER = "";
     private final static String ORACLE_PASS = "";
-    private final static String POSTGRES_URL = "jdbc:postgresql://pg:5432/ucheb";
-    private final static String POSTGRES_DRIVER = "org.postgresql.Driver";
-    private final static String POSTGRES_USER = "";
-    private final static String POSTGRES_PASS = "";
 
-    private final static String DATA_SOURCE_NAME = "myDatabase";
+    private final static String FILENAME = "S182190_1";
 
-    private final static String CRS_FILE_LOC_TASK3 ="cachedrs_task3.crs";
-    private final static String CRS_FILE_LOC_TASK4 ="cachedrs_task4.crs";
-
-    private static Context context = null;
 
     public static void main(String[] args) {
-        if (args.length > 0) {
-            switch (args[0]) {
-                case "task1": {
-                    try {
-                        OracleJDBCRowSet oracleJDBCRowSet = new OracleJDBCRowSet();
-                        oracleJDBCRowSet.setUrl(ORACLE_URL);
-                        oracleJDBCRowSet.setUsername(ORACLE_USER);
-                        oracleJDBCRowSet.setPassword(ORACLE_PASS);
-                        oracleJDBCRowSet.setCommand("SELECT count(*) FROM н_люди");
-                        oracleJDBCRowSet.execute();
-                        LabHelper.printResultSet(oracleJDBCRowSet);
-                    } catch (SQLException se) {
-                        se.printStackTrace();
+        // 1. Восстановить объект типа CachedRowSet из файла, сохраненного при выполнении задания №8 в домашнем каталоге студента, ID которого совпадает с номером варианта, выданного преподавателем.
+        OracleCachedRowSet oracleCachedRowSet;
+        try (FileInputStream fileInputStream = new FileInputStream(FILENAME)) {
+            try (ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
+                oracleCachedRowSet = (OracleCachedRowSet) objectInputStream.readObject();
+                System.out.println(FILENAME);
+
+                // 2. Вывести на экран данные полученного объекта типа CachedRowSet в виде таблицы с названиями столбцов и указанием типа данных каждого столбца, для чего необходимо получить объект типа ResultSetMetaData и воспользоваться его методами.
+                print(oracleCachedRowSet);
+
+                // 3. Создать в базе данных таблицу с соответствующим количеством столбцов и заполнить ее данными объекта типа CachedRowSet. Типы данных объекта CachedRowSet и столбцов таблицы должны совпадать.
+                try (Connection connection = DriverManager.getConnection(ORACLE_URL, ORACLE_USER, ORACLE_PASS)) {
+                    try (Statement statement = connection.createStatement()) {
+                        StringBuilder query = new StringBuilder("CREATE TABLE ");
+                        query.append(FILENAME);
+                        query.append(" (");
+
+                        ResultSetMetaData metaData = oracleCachedRowSet.getMetaData();
+                        for (int column = 1; column <= metaData.getColumnCount(); column++) {
+                            query.append(metaData.getColumnName(column));
+                            query.append(" ");
+                            query.append(metaData.getColumnTypeName(column));
+                            query.append("(");
+                            switch (metaData.getColumnType(column)) {
+                                case 2:
+                                case 4:
+                                    int size = metaData.getColumnDisplaySize(column);
+                                    query.append(size > 38? 38: size);
+                                    query.append(", ");
+                                    query.append("2");
+                                    break;
+                                default:
+                                    query.append(metaData.getColumnDisplaySize(column));
+                                    break;
+                            }
+                            query.append(")");
+                            if (column != metaData.getColumnCount())
+                                query.append(", ");
+                        }
+
+                        query.append(")");
+                        try {
+                            System.out.printf("DROP TABLE %s CASCADE CONSTRAINTS%n", FILENAME);
+                            statement.executeUpdate(String.format("DROP TABLE %s CASCADE CONSTRAINTS", FILENAME));
+                        } catch (SQLException e) {
+                            System.out.println(e.getMessage());
+                        }
+                        System.out.println(query.toString());
+                        statement.executeUpdate(query.toString());
                     }
-                    break;
                 }
-                case "task2": {
-                    try {
-                        OracleJDBCRowSet oracleJDBCRowSet = new OracleJDBCRowSet();
-                        oracleJDBCRowSet.setUrl(ORACLE_URL);
-                        oracleJDBCRowSet.setUsername(ORACLE_USER);
-                        oracleJDBCRowSet.setPassword(ORACLE_PASS);
-                        oracleJDBCRowSet.setCommand("SELECT * FROM н_люди WHERE ид = ?");
-                        oracleJDBCRowSet.setInt(1,161148);
-                        oracleJDBCRowSet.execute();
-                        LabHelper.printResultSet(oracleJDBCRowSet);
-                    } catch (SQLException se) {
-                        se.printStackTrace();
+
+                System.out.println();
+                try (OracleCachedRowSet dbCachedRowSet = new OracleCachedRowSet()) {
+                    dbCachedRowSet.setUrl(ORACLE_URL);
+                    dbCachedRowSet.setUsername(ORACLE_USER);
+                    dbCachedRowSet.setPassword(ORACLE_PASS);
+                    ResultSetMetaData metaData = oracleCachedRowSet.getMetaData();
+                    StringBuilder query = new StringBuilder("SELECT ");
+                    for (int column = 1; column <= metaData.getColumnCount(); column++) {
+                        query.append(metaData.getColumnName(column));
+                        if (column != metaData.getColumnCount())
+                            query.append(", ");
                     }
-                    break;
-                }
-                case "task3": {
-                    File jnfiDir = new File("JNDI");
-                    if (!jnfiDir.exists())
-                        jnfiDir.mkdir();
+                    query.append(" FROM ");
+                    query.append(FILENAME);
 
-                    try {
-                        Hashtable environment = new Hashtable();
-                        environment.put (Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.fscontext.RefFSContextFactory");
-                        environment.put (Context.PROVIDER_URL, "file:JNDI");
-                        context = new InitialContext(environment);
-
-                        bindDataSource(context, DATA_SOURCE_NAME);
-
-                        //Create serialized CachedRowSet
-                        writeCachedRowSet();
-
-                        //Create CachedRowSet from serialized object
-                        OracleCachedRowSet oracleCachedRowSet = readCachedRowSet();
-
-                        //Display values
-                        LabHelper.printResultSet(oracleCachedRowSet);
-                        //Close resource
-                        oracleCachedRowSet.close();
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
+                    System.out.println(query.toString());
+                    dbCachedRowSet.setCommand(query.toString());
+                    dbCachedRowSet.execute();
+                    dbCachedRowSet.setReadOnly(false);
+                    print(dbCachedRowSet);
+                    oracleCachedRowSet.beforeFirst();
+                    dbCachedRowSet.beforeFirst();
+                    while (oracleCachedRowSet.next()) {
+                        dbCachedRowSet.moveToInsertRow();
+                        for (int column = 1; column <= metaData.getColumnCount(); column++)
+                            switch (metaData.getColumnType(column)) {
+                                case 2:
+                                case 4:
+                                    dbCachedRowSet.updateDouble(column, oracleCachedRowSet.getDouble(column));
+                                    break;
+                                case 12:
+                                    dbCachedRowSet.updateString(column, oracleCachedRowSet.getString(column));
+                                    break;
+                                default:
+                                    break;
+                            }
+                        dbCachedRowSet.insertRow();
                     }
-                    break;
+                    dbCachedRowSet.acceptChanges();
+                    dbCachedRowSet.execute();
+                    print(dbCachedRowSet);
+
+                    // 4. Обновить данные в таблице и выдать их используя тот же самый объект CachedRowSet в виде таблицы с названиями столбцов и указанием типа данных каждого столбца, для чего необходимо получить объект типа ResultSetMetaData и воспользоваться его методами.
+                    dbCachedRowSet.first();
+                    dbCachedRowSet.updateString("ФАМИЛИЯ", "Савушкин");
+                    dbCachedRowSet.updateString("ИМЯ", "Иван");
+                    dbCachedRowSet.updateString("ОТЧЕСТВО", "Евгеньевич");
+                    dbCachedRowSet.updateDouble("СРЕДНЯЯ_ОЦЕНКА", 5.0);
+                    dbCachedRowSet.updateRow();
+                    dbCachedRowSet.acceptChanges();
+                    dbCachedRowSet.execute();
+                    print(dbCachedRowSet);
                 }
-                case "task4": {
-                    try {
-                        System.out.println("load data...");
-                        OracleCachedRowSet oracleCachedRowSet = new OracleCachedRowSet();
-                        oracleCachedRowSet.setUrl(ORACLE_URL);
-                        oracleCachedRowSet.setUsername(ORACLE_USER);
-                        oracleCachedRowSet.setPassword(ORACLE_PASS);
-                        oracleCachedRowSet.setCommand("SELECT * FROM номера_телефонов");
-                        oracleCachedRowSet.execute();
-                        LabHelper.printResultSet(oracleCachedRowSet);
-                        FileOutputStream fileOutputStream = new FileOutputStream(CRS_FILE_LOC_TASK4);
-                        ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-                        objectOutputStream.writeObject(oracleCachedRowSet);
-                        objectOutputStream.close();
-
-                        System.out.println("read data...");
-                        FileInputStream fileInputStream = new FileInputStream(CRS_FILE_LOC_TASK4);
-                        ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-                        oracleCachedRowSet = (OracleCachedRowSet)objectInputStream.readObject();
-                        fileInputStream.close();
-                        objectInputStream.close();
-                        oracleCachedRowSet.setCommand("SELECT * FROM номера_телефонов");
-                        oracleCachedRowSet.execute();
-                        LabHelper.printResultSet(oracleCachedRowSet);
-
-                        System.out.println("update row...");
-                        oracleCachedRowSet.setReadOnly(false);
-                        oracleCachedRowSet.first();
-                        oracleCachedRowSet.updateString(2,"1131313");
-                        oracleCachedRowSet.updateRow();
-                        oracleCachedRowSet.acceptChanges();
-                        LabHelper.printResultSet(oracleCachedRowSet);
-
-                        System.out.println("update row cancel...");
-                        oracleCachedRowSet.setReadOnly(false);
-                        oracleCachedRowSet.last();
-                        oracleCachedRowSet.updateString(2,"42424242");
-                        oracleCachedRowSet.updateRow();
-                        oracleCachedRowSet.cancelRowUpdates();
-                        LabHelper.printResultSet(oracleCachedRowSet);
-
-                        System.out.println("insert row...");
-                        oracleCachedRowSet.moveToInsertRow();
-                        oracleCachedRowSet.updateInt(1,120848);
-                        oracleCachedRowSet.updateString(2,"9332323");
-                        oracleCachedRowSet.updateDate(3, new Date(System.currentTimeMillis()));
-                        oracleCachedRowSet.updateInt(4,1);
-                        oracleCachedRowSet.insertRow();
-                        oracleCachedRowSet.acceptChanges();
-                        LabHelper.printResultSet(oracleCachedRowSet);
-
-                        System.out.println("insert row cancel...");
-                        oracleCachedRowSet.moveToInsertRow();
-                        oracleCachedRowSet.updateInt(1,120848);
-                        oracleCachedRowSet.updateString(2,"9332323");
-                        oracleCachedRowSet.updateDate(3, new Date(System.currentTimeMillis()));
-                        oracleCachedRowSet.updateInt(4,1);
-                        oracleCachedRowSet.insertRow();
-                        oracleCachedRowSet.restoreOriginal();
-                        LabHelper.printResultSet(oracleCachedRowSet);
-                        oracleCachedRowSet.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    break;
-                }
-                default:
-                    System.err.println("Undefined argument");
-                    break;
             }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        System.out.println("Goodbye!");
     }
 
-    public static void writeCachedRowSet() throws Exception {
-        Connection connection;
-        DataSource dataSource;
-        dataSource = (DataSource) context.lookup(DATA_SOURCE_NAME);
-        connection = dataSource.getConnection();
+    private static void print(ResultSet resultSet) throws SQLException {
+        ResultSetMetaData metaData = resultSet.getMetaData();
 
-        //Instantiate a CachedRowSet object, set connection parameters
-        OracleCachedRowSet oracleCachedRowSet = new OracleCachedRowSet();
-
-        //Set and execute the command. Notice the parameter query.
-        oracleCachedRowSet.setCommand("SELECT * FROM н_люди WHERE ид = ?");
-        oracleCachedRowSet.setInt(1,161148);
-        oracleCachedRowSet.execute(connection);
-
-        //Serialize CachedRowSet object.
-        FileOutputStream fileOutputStream = new FileOutputStream(CRS_FILE_LOC_TASK3);
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-        objectOutputStream.writeObject(oracleCachedRowSet);
-        objectOutputStream.close();
-        oracleCachedRowSet.close();
-        connection.close();
-    }//end writeCachedRowSet()
-
-    public static OracleCachedRowSet readCachedRowSet() throws Exception{
-        //Read serialized CachedRowSet object from storage
-        FileInputStream fileInputStream = new FileInputStream(CRS_FILE_LOC_TASK3);
-        ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-        OracleCachedRowSet oracleCachedRowSet = (OracleCachedRowSet)objectInputStream.readObject();
-        fileInputStream.close();
-        objectInputStream.close();
-        return oracleCachedRowSet;
-    }//end readCachedRowSet()
-
-    public static void bindDataSource(Context context, String dataSourceName)
-            throws SQLException, NamingException {
-        OracleDataSource oracleDataSource = new OracleDataSource();
-        oracleDataSource.setUser(ORACLE_USER);
-        oracleDataSource.setPassword(ORACLE_PASS);
-        oracleDataSource.setDriverType("thin");
-        oracleDataSource.setDatabaseName("orbis");
-        oracleDataSource.setServerName("localhost");
-        oracleDataSource.setPortNumber(1521);
-        context.rebind (dataSourceName, oracleDataSource);
+        while (resultSet.next()) {
+            int columnsCount = metaData.getColumnCount();
+            for (int column = 1; column <= columnsCount; column++) {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append(metaData.getColumnName(column)).append(": ");
+                stringBuilder.append("(" + metaData.getColumnTypeName(column) + ") ");
+                switch (metaData.getColumnType(column)) {
+                    case 2:
+                    case 4:
+                        stringBuilder.append(resultSet.getDouble(column));
+                        break;
+                    case 12:
+                        stringBuilder.append(resultSet.getString(column));
+                        break;
+                    default:
+                        stringBuilder.append("column type - ").append(metaData.getColumnType(column));
+                        break;
+                }
+                System.out.println(stringBuilder.toString());
+            }
+            System.out.println();
+        }
     }
-
 }
