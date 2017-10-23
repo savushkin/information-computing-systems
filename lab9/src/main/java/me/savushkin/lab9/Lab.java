@@ -6,8 +6,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.sql.*;
-import java.util.Arrays;
-import java.util.List;
 
 public class Lab {
     // 1. Восстановить объект типа CachedRowSet из файла, сохраненного при выполнении задания №8 в домашнем каталоге студента, ID которого совпадает с номером варианта, выданного преподавателем.
@@ -129,11 +127,7 @@ public class Lab {
                     print(dbCachedRowSet);
                 }
             }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ClassNotFoundException | SQLException | IOException e) {
             e.printStackTrace();
         }
     }
