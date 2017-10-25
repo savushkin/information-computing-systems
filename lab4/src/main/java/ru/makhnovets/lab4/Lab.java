@@ -1,9 +1,11 @@
 package ru.makhnovets.lab4;
 
-import java.awt.geom.RectangularShape;
+/*import java.awt.geom.RectangularShape;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.Statement;*/
 
 public class Lab {
     //33639
@@ -14,16 +16,12 @@ public class Lab {
     //9. TYPE_FORWARD_ONLY, CONCUR_UPDATABLE, DatabaseMetaData
 
     private static String ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver";
-    private static String ORACLE_USER = "";
-    private static String ORACLE_PASS = "";
+    private static String ORACLE_USER = "s182119";
+    private static String ORACLE_PASS = "fax573";
     private static String ORACLE_URL = String.format(
             "jdbc:oracle:thin:%s/%s@localhost:1521:orbis",
             ORACLE_USER,
             ORACLE_PASS);
-    private static String operatorsql = "CREATE TABLE операторы_связи (ид NUMERIC(3) CONSTRAINT ПК_ОС PRIMARY KEY, оператор VARCHAR(20))";
-    private static String telefonsql = "CREATE TABLE номера_телефонов (ид_л NUMERIC(9) CONSTRAINT ВК_Л REFERENCES н_люди(ид), номер_телефона VARCHAR(20), дата_регистрации DATE, ид_ос NUMERIC(3) CONSTRAINT ВК_ОС REFERENCES операторы_связи(ид))";
-
-
 
     public static void main(String[] args) {
         java.sql.Connection connection = null;
@@ -39,18 +37,12 @@ public class Lab {
             insertData(statement);
             System.out.println("Select data");
             selectData(statement);
-
-            String sql="SELECT * FROM операторы_связи WHERE ид=1";
-            ResultSet resultSet = statement.executeQuery(sql);
-            while (resultSet.next()) {
-                if (resultSet.isFirst()) {
-                    resultSet.updateString("оператор","new operator");
-                    System.out.println("chance first row");
-                }
-                continue;
-            }
+            System.out.println("Change data");
+            changeData(statement);
             selectData(statement);
+            getDatabaseMetaData(connection);
             statement.close();
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -63,29 +55,37 @@ public class Lab {
             }
         }
     }
-    private static void selectData(Statement statement) throws SQLException {
-        String sql="SELECT * FROM операторы_связи";
+
+    //select data
+    private static void selectData(java.sql.Statement statement) throws java.sql.SQLException {
+        String sql="SELECT * FROM apartment";
         Boolean isRetrieved = statement.execute(sql);
         System.out.println("Is data retrieved: " + isRetrieved);
         System.out.println("Displaying retrieved data:");
-        ResultSet resultSet = statement.executeQuery(sql);
+        java.sql.ResultSet resultSet = statement.executeQuery(sql);
         while (resultSet.next()) {
-            int id = resultSet.getInt("ид");
-            String name = resultSet.getString("оператор");
+            int id = resultSet.getInt("id");
+            String name = resultSet.getString("name");
+            int price = resultSet.getInt("price");
+            String metro = resultSet.getString("metro");
+            String phone = resultSet.getString("phone");
+            String email = resultSet.getString("email");
 
-            System.out.println("ID: " + id);
-            System.out.println("Operator: " + name);
-            //System.out.println("Specialty: " + specialty);
-            //System.out.println("Salary: " + salary);
+            System.out.println("id: " + id);
+            System.out.println("name: " + name);
+            System.out.println("price: " + price);
+            System.out.println("metro: " + metro);
+            System.out.println("phone: " + phone);
+            System.out.println("email: " + email);
             System.out.println("===================");
         }
     }
-    private static void createTables(Statement statement) throws SQLException {
-        String operatorsql = "CREATE TABLE операторы_связи (ид NUMERIC(3) CONSTRAINT ПК_ОС PRIMARY KEY, оператор VARCHAR(20))";
-        //String telefonsql = "CREATE TABLE номера_телефонов (ид_л NUMERIC(9) CONSTRAINT ВК_Л REFERENCES н_люди(ид), номер_телефона VARCHAR(20), дата_регистрации DATE, ид_ос NUMERIC(3) CONSTRAINT ВК_ОС REFERENCES операторы_связи(ид))";
+    //create table
+    private static void createTables(java.sql.Statement statement) throws java.sql.SQLException {
+        String apartmentsql = "CREATE TABLE apartment (id NUMBER PRIMARY KEY, name VARCHAR(50), price NUMBER, metro VARCHAR(50), phone VARCHAR(50), email VARCHAR(50))";
         try {
-            statement.execute("DROP TABLE операторы_связи CASCADE CONSTRAINTS");
-        } catch (SQLException se) {
+            statement.execute("DROP TABLE apartment CASCADE CONSTRAINTS");
+        } catch (java.sql.SQLException se) {
             //Игнорировать ошибку удаления таблицы
             if(se.getErrorCode()==942) {
                 String msg = se.getMessage();
@@ -93,14 +93,52 @@ public class Lab {
             }
         }
         //Создание таблицы операторы_связи
-        if(statement.execute(operatorsql))
+        if(statement.execute(apartmentsql))
             System.out.println("Table operators create...");
     }
-    private static void insertData(Statement statement) throws SQLException {
+    //insertData
+    private static void insertData(java.sql.Statement statement) throws java.sql.SQLException {
         //Загрузка данных в таблицу операторы_связи
-        statement.execute("INSERT INTO операторы_связи VALUES(1,'Megafon')");
-        statement.execute("INSERT INTO операторы_связи VALUES(2,'MTC')");
-        statement.execute("INSERT INTO операторы_связи VALUES(3,'Beeline')");
-        statement.execute("INSERT INTO операторы_связи VALUES(4,'SkyLink')");
+        statement.execute("INSERT INTO apartment VALUES(1, 'Nina', 30000, 'Petrogradskaya', '+79423182475', 'kakoi-to@email.com')");
+        statement.execute("INSERT INTO apartment VALUES(2, 'Nina', 45000, 'Petrogradskaya', '+79423182475', 'kakoi-to@email.com')");
+        statement.execute("INSERT INTO apartment VALUES(3, 'Daniil', 30000, 'Gorkovskaya', '+79812532345', 'kakoi-to-eche@email.com')");
+        statement.execute("INSERT INTO apartment VALUES(4, 'Viktoria', 10000, 'Kupchino', '+78126669969', 'kupchino@email.com')");
+        statement.execute("INSERT INTO apartment VALUES(5, 'Viktoria', 30000, 'Kupchino', '+78129996696', 'kupchino@email.com')");
     }
-}
+
+    //step 5, change data with updateble ResultSet
+    private static void changeData(java.sql.Statement statement) throws java.sql.SQLException {
+        String sql="SELECT email,name FROM apartment";
+        java.sql.ResultSet resultSet = statement.executeQuery(sql);
+        while (resultSet.next()) {
+            String name = resultSet.getString("name");
+            if (name.equalsIgnoreCase("Daniil")) {
+                resultSet.updateString("email","daniil@google.com");
+                resultSet.updateRow();
+                System.out.println("change row");
+                break;
+            }
+            continue;
+        }
+
+        }
+
+        //step 5, DatabaseMetaData
+        private static void getDatabaseMetaData(java.sql.Connection connection) throws java.sql.SQLException {
+            java.sql.DatabaseMetaData databaseMetaData = connection.getMetaData();
+            String productName = databaseMetaData.getDatabaseProductName();
+            int productMajorVersion = databaseMetaData.getDatabaseMajorVersion();
+            System .out.println("Database name: "+productName+" ; major version: "+productMajorVersion);
+            // Набор данных поддерживаемых типов
+            java.sql.ResultSet resultSet = databaseMetaData.getTypeInfo();
+            System.out.println("A description of all the data types supported by this database:");
+            while (resultSet.next()) {
+                System.out.println(resultSet.getString(1));
+            }
+            if (databaseMetaData.allProceduresAreCallable()){
+                System.out.println("The current user can call all the procedures returned by the method getProcedures");
+
+            }else {System.out.println("The current user can't call all the procedures returned by the method getProcedures");}
+
+        }
+    }
