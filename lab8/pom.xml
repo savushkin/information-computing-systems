@@ -19,7 +19,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>ru.makhnovets.lab8.s182119</mainClass>
+                            <mainClass>ru.makhnovets.lab8.S182119</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
