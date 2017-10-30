@@ -1,5 +1,12 @@
 package ru.makhnovets.lab8;
 
+import oracle.jdbc.rowset.OracleCachedRowSet;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.sql.*;
+
 public class S182119 {
     /*
     На контрольном занятии необходимо создать java-класс, включающий в себя следующие обязательные действия:
@@ -25,32 +32,35 @@ public class S182119 {
     private static String ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver";
     private static String ORACLE_USER = "s182119";
     private static String ORACLE_PASS = "fax573";
-    private static String ORACLE_URL = String.format(
-            "jdbc:oracle:thin:%s/%s@localhost:1521:orbis",
-            ORACLE_USER,
-            ORACLE_PASS);
+    private static String ORACLE_URL = "jdbc:oracle:thin:@localhost:1521:orbis";
+
+    private final static String NUMBER = "220100";
+
+    private final static String QUERY = "select н_ученики.группа, н_люди.ид, н_люди.фамилия, н_люди.имя, н_люди.отчество, н_ученики.п_пркок_ид, н_ученики.состояние, н_ученики.признак, н_ученики.конец from н_люди join н_ученики on н_люди.ид = н_ученики.члвк_ид where exists(select н_планы.ид from н_планы where exists(select н_формы_обучения.ид from н_формы_обучения where н_формы_обучения.наименование in ('Очная') and н_планы.фо_ид = н_формы_обучения.ид) and exists(select н_направления_специал.ид from н_направления_специал where exists(select н_напр_спец.ид from н_напр_спец where н_направления_специал.нс_ид = н_напр_спец.ид and н_напр_спец.код_напрспец in (?)) and н_планы.напс_ид = н_направления_специал.ид) and н_планы.курс='1' and to_char(н_ученики.начало,'YYYY') in (to_char(SYSDATE,'YYYY')-17) and to_char(н_ученики.начало,'DD.MM') in('01.09') and н_ученики.план_ид = н_планы.ид) ORDER BY н_ученики.группа, н_люди.фамилия";
 
     public static void main(String[] args) {
-        java.sql.Connection connection = null;
-        java.lang.System.setProperty("Djdbc.driver", ORACLE_DRIVER);
         try {
-            connection = java.sql.DriverManager.getConnection(ORACLE_URL);
-            java.sql.Statement statement = connection.createStatement(
-                    java.sql.ResultSet.TYPE_FORWARD_ONLY,
-                    java.sql.ResultSet.CONCUR_UPDATABLE);
+            Class.forName(ORACLE_DRIVER);
+            try (Connection connection = DriverManager.getConnection(ORACLE_URL, ORACLE_USER, ORACLE_PASS)) {
+                try (PreparedStatement statement = connection.prepareStatement(QUERY)) {
+                    statement.setString(1, NUMBER);
+                    try (ResultSet resultSet = statement.executeQuery()) {
+                        OracleCachedRowSet oracleCachedRowSet = new OracleCachedRowSet();
+                        oracleCachedRowSet.populate(resultSet);
 
-            statement.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.close();
+                        try (ObjectOutputStream objectOutputStream =
+                                     new ObjectOutputStream(
+                                             new FileOutputStream("S182119"))) {
+                            objectOutputStream.writeObject(oracleCachedRowSet);
+                            objectOutputStream.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
         }
     }
 }
