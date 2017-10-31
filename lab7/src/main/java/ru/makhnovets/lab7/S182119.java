@@ -25,7 +25,7 @@ public class S182119 {
     private static String ORACLE_PASS = "";
     private static String ORACLE_URL = "jdbc:oracle:thin:@localhost:1521:orbis";
 
-    private final static String GROUP_NUM = "5110";
+    private final static String GROUP_NUM = "4112";
     private final static String DATA_FILE = GROUP_NUM + ".data";
 
     public static void main(String[] args) {
